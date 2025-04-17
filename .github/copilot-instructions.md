@@ -1,0 +1,3 @@
+<!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->
+
+This is a full-stack e-commerce project with a React frontend, Node.js/Express backend, MongoDB, and Cloudinary integration. Prioritize best practices for API, authentication, and image upload features.
