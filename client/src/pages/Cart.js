@@ -26,14 +26,14 @@ const Cart = () => {
                   </div>
                 </div>
                 <div className="cart-item-actions">
-                  <span className="cart-item-price">${item.price * item.quantity}</span>
+                  <span className="cart-item-price">PKR {item.price * item.quantity}</span>
                   <button onClick={() => removeFromCart(item._id)} className="cart-item-remove"><FaTrash /></button>
                 </div>
               </li>
             ))}
           </ul>
           <div className="cart-summary">
-            <div className="cart-total">Total: ${total}</div>
+            <div className="cart-total">Total: PKR {total}</div>
             <div>
               <Link to="/checkout" className="cart-checkout-btn">Proceed to Checkout</Link>
               <button onClick={clearCart} className="cart-clear-btn">Clear Cart</button>

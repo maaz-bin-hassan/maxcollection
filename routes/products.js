@@ -13,7 +13,7 @@ const adminAuth = (req, res, next) => {
 // POST /api/products — Add product with multiple images (admin only)
 router.post('/', adminAuth, async (req, res) => {
   try {
-    const { name, description, category, price, quantity, images } = req.body;
+    const { name, description, category, price, quantity, images, shippingPrice } = req.body;
     if (!images || !Array.isArray(images) || images.length === 0) {
       return res.status(400).json({ message: 'At least one image is required.' });
     }
@@ -23,7 +23,7 @@ router.post('/', adminAuth, async (req, res) => {
       const uploadRes = await cloudinary.uploader.upload(base64, { folder: 'max-collection/products' });
       imageUrls.push(uploadRes.secure_url);
     }
-    const product = new Product({ name, description, category, price, quantity, imageUrls });
+    const product = new Product({ name, description, category, price, quantity, imageUrls, shippingPrice });
     await product.save();
     res.status(201).json(product);
   } catch (err) {

@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import ProductUpload from '../components/ProductUpload';
 import OrderAdmin from '../components/OrderAdmin';
+import './Admin.css';
 
 const Admin = () => {
   const [token, setToken] = useState(localStorage.getItem('adminToken') || '');
   const [input, setInput] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [showOrders, setShowOrders] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginError('');
-    // Try to access a protected endpoint to validate token
     try {
       const res = await fetch('/api/products', {
         method: 'POST',
@@ -24,7 +25,6 @@ const Admin = () => {
         setLoginError('Invalid admin token.');
         return;
       }
-      // If not unauthorized, assume token is valid (test product will fail for other reasons, but not 401)
       localStorage.setItem('adminToken', input);
       setToken(input);
     } catch {
@@ -39,27 +39,50 @@ const Admin = () => {
 
   if (!token) {
     return (
-      <div className="container mx-auto py-8 max-w-md">
-        <h1 className="text-2xl font-bold mb-4">Admin Login</h1>
-        <form onSubmit={handleLogin} className="flex flex-col gap-4">
-          <input type="password" value={input} onChange={e => setInput(e.target.value)} placeholder="Enter admin token" className="border p-2" />
-          <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Login</button>
-          {loginError && <div style={{ color: 'red' }}>{loginError}</div>}
-        </form>
+      <div className="admin-login-container">
+        <div className="admin-login-card">
+          <h1 className="admin-title">Admin Login</h1>
+          <form onSubmit={handleLogin} className="admin-login-form">
+            <label className="admin-label" htmlFor="admin-token">Admin Token</label>
+            <input
+              id="admin-token"
+              type="password"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              placeholder="Enter admin token"
+              className="admin-input"
+              autoFocus
+            />
+            <button type="submit" className="admin-btn admin-btn-primary">Login</button>
+            {loginError && <div className="admin-error">{loginError}</div>}
+          </form>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Admin Panel</h1>
-        <button onClick={handleLogout} className="text-red-600">Logout</button>
+    <div className="admin-panel-container">
+      <div className="admin-panel-header">
+        <h1 className="admin-title">Admin Panel</h1>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button onClick={() => setShowOrders(true)} className="admin-btn admin-btn-secondary">See Orders</button>
+          <button onClick={handleLogout} className="admin-btn admin-btn-danger">Logout</button>
+        </div>
       </div>
-      <div className="grid md:grid-cols-2 gap-8">
-        <ProductUpload token={token} />
-        <OrderAdmin token={token} />
+      <div className="admin-panel-content">
+        <div className="admin-panel-section">
+          <ProductUpload token={token} />
+        </div>
       </div>
+      {showOrders && (
+        <div className="admin-orders-modal">
+          <div className="admin-orders-modal-content">
+            <button className="admin-orders-modal-close" onClick={() => setShowOrders(false)}>&times;</button>
+            <OrderAdmin token={token} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

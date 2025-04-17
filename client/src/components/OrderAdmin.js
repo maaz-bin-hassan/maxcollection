@@ -1,4 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import './OrderAdmin.css';
+
+const statusOptions = [
+  { value: 'pending', label: 'Pending' },
+  { value: 'processing', label: 'Processing' },
+  { value: 'delivered', label: 'Delivered' },
+  { value: 'cancelled', label: 'Cancelled' },
+];
 
 const OrderAdmin = ({ token }) => {
   const [orders, setOrders] = useState([]);
@@ -48,42 +56,87 @@ const OrderAdmin = ({ token }) => {
     // eslint-disable-next-line
   }, []);
 
-  const markDelivered = async id => {
+  const updateStatus = async (id, newStatus) => {
     setStatus('Updating...');
     await fetch(`/api/orders/${id}/deliver`, {
       method: 'PUT',
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ status: newStatus })
     });
     setStatus('Order updated.');
     fetchOrders();
   };
 
-  if (loading) return <div>Loading orders...</div>;
-  if (error) return <div style={{ color: 'red' }}>{error}</div>;
-  if (!orders.length) return <div>No orders found.</div>;
+  if (loading) return <div className="orderadmin-fullpage"><div className="orderadmin-card">Loading orders...</div></div>;
+  if (error) return <div className="orderadmin-fullpage"><div className="orderadmin-card orderadmin-error">{error}</div></div>;
+  if (!orders.length) return <div className="orderadmin-fullpage"><div className="orderadmin-card orderadmin-empty">No orders found.</div></div>;
 
   return (
-    <div className="bg-white p-6 rounded shadow max-h-[70vh] overflow-auto">
-      <h2 className="text-xl font-bold mb-4">Orders</h2>
-      <ul className="divide-y">
+    <div className="orderadmin-fullpage">
+      <h1 className="orderadmin-title orderadmin-title-lg">Order Management</h1>
+      <div className="orderadmin-orders-list">
         {orders.map(order => (
-          <li key={order._id} className="py-3">
-            <div className="flex justify-between items-center">
+          <div key={order._id} className="orderadmin-order-block">
+            <div className="orderadmin-order-header">
               <div>
-                <div className="font-semibold">{order.userInfo.name} ({order.userInfo.email})</div>
-                <div className="text-gray-500 text-sm">{order.userInfo.address}, {order.userInfo.city}, {order.userInfo.province}, {order.userInfo.postalCode}</div>
-                <div className="text-gray-500 text-sm">Phone: {order.userInfo.number}</div>
-                <div className="text-gray-700 mt-1">Items: {order.cartItems.map(i => `${i.name} x${i.quantity}`).join(', ')}</div>
-                <div className="text-xs text-gray-400">Status: {order.status}</div>
+                <span className="orderadmin-list-name">{order.userInfo.name}</span>
+                <span className="orderadmin-list-email">({order.userInfo.email})</span>
               </div>
-              {order.status === 'pending' && (
-                <button onClick={() => markDelivered(order._id)} className="bg-green-600 text-white px-3 py-1 rounded">Mark Delivered</button>
-              )}
+              <div className="orderadmin-order-status-row">
+                <span className={`orderadmin-status orderadmin-status-${order.status}`}>{order.status}</span>
+                <select
+                  value={order.status}
+                  onChange={e => updateStatus(order._id, e.target.value)}
+                  className="orderadmin-status-select orderadmin-status-select-lg"
+                >
+                  {statusOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-          </li>
+            <div className="orderadmin-order-body">
+              <div className="orderadmin-order-section">
+                <ul className="orderadmin-customer-bullet">
+                  <li><strong>Name:</strong> {order.userInfo.name}</li>
+                  <li><strong>Email:</strong> {order.userInfo.email}</li>
+                  <li><strong>Contact:</strong> {order.userInfo.number}</li>
+                </ul>
+              </div>
+              <div className="orderadmin-order-section">
+                <strong>Address:</strong> {order.userInfo.address}, {order.userInfo.city}, {order.userInfo.province}, {order.userInfo.postalCode}
+              </div>
+              <div className="orderadmin-order-section">
+                <strong>Items:</strong>
+                <ul className="orderadmin-product-list-bullet">
+                  {order.cartItems.map((item, idx) => (
+                    <li key={idx} className="orderadmin-product-list-bullet-item">
+                      <div className="orderadmin-product-bullet-flex">
+                        <img
+                          src={item.imageUrls && item.imageUrls[0] ? item.imageUrls[0] : (item.imageUrl ? item.imageUrl : "/logo192.png")}
+                          alt={item.name}
+                          className="orderadmin-product-img-lg"
+                        />
+                        <div className="orderadmin-product-bullet-info">
+                          <div><strong>{item.name}</strong></div>
+                          <ul className="orderadmin-product-bullet-details">
+                            <li>Category: {item.category || '-'}</li>
+                            <li>Price: PKR {item.price}</li>
+                            <li>Shipping: PKR {item.shippingPrice || '-'}</li>
+                            <li>Qty: {item.quantity}</li>
+                            {item.size && <li>Size: {item.size}</li>}
+                          </ul>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
         ))}
-      </ul>
-      {status && <div className="mt-2">{status}</div>}
+      </div>
+      {status && <div className="orderadmin-status-msg">{status}</div>}
     </div>
   );
 };

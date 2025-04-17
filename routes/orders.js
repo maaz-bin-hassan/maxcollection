@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
+const Product = require('../models/Product');
 
 // Middleware for admin authentication
 const adminAuth = (req, res, next) => {
   const token = req.headers.authorization;
-  if (token === 'Bearer your-token') return next();
+  if (token === `Bearer ${process.env.ADMIN_TOKEN}`) return next();
   return res.status(401).json({ message: 'Unauthorized' });
 };
 
@@ -16,7 +17,16 @@ router.post('/', async (req, res) => {
     if (!userInfo || !cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
       return res.status(400).json({ message: 'User info and cart items are required.' });
     }
-    const order = new Order({ userInfo, cartItems });
+    // Attach imageUrls to each cartItem
+    const cartItemsWithImages = await Promise.all(cartItems.map(async (item) => {
+      let imageUrls = [];
+      if (item.productId) {
+        const product = await Product.findById(item.productId);
+        if (product && product.imageUrls) imageUrls = product.imageUrls;
+      }
+      return { ...item, imageUrls };
+    }));
+    const order = new Order({ userInfo, cartItems: cartItemsWithImages });
     await order.save();
     res.status(201).json(order);
   } catch (err) {

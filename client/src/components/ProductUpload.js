@@ -1,4 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import './ProductUpload.css';
+
+const CATEGORY_OPTIONS = [
+  { value: '', label: 'Select Category' },
+  { value: 'clothes', label: 'Clothes' },
+  { value: 'electronics', label: 'Electronics' },
+  { value: 'accessories', label: 'Accessories' },
+  { value: 'shoes', label: 'Shoes' },
+  { value: 'mobiles', label: 'Mobiles' },
+];
 
 const ProductUpload = ({ token }) => {
   const [form, setForm] = useState({
@@ -11,7 +21,8 @@ const ProductUpload = ({ token }) => {
   const fetchProducts = () => {
     fetch('/api/products')
       .then(res => res.json())
-      .then(setProducts);
+      .then(data => setProducts(Array.isArray(data) ? data : []))
+      .catch(() => setProducts([]));
   };
 
   useEffect(() => {
@@ -49,7 +60,6 @@ const ProductUpload = ({ token }) => {
         shippingPrice: Number(form.shippingPrice)
       };
       if (editingId) {
-        // If new images are uploaded, upload to Cloudinary first
         if (form.images.length) {
           const res = await fetch('/api/products', {
             method: 'POST',
@@ -70,7 +80,6 @@ const ProductUpload = ({ token }) => {
             return;
           }
         }
-        // Otherwise, just update fields
         const res = await fetch(`/api/products/${editingId}`, {
           method: 'PUT',
           headers: {
@@ -135,42 +144,78 @@ const ProductUpload = ({ token }) => {
   };
 
   const handleDelete = async id => {
-    if (!window.confirm('Delete this product?')) return;
     setStatus('Deleting...');
-    await fetch(`/api/products/${id}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    setStatus('Product deleted.');
-    fetchProducts();
+    try {
+      const res = await fetch(`/api/products/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setStatus('Product deleted.');
+        fetchProducts();
+      } else {
+        let errMsg = 'Delete failed.';
+        try {
+          const contentType = res.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const err = await res.json();
+            errMsg = err.message || errMsg;
+          } else {
+            const text = await res.text();
+            if (text) errMsg = text;
+          }
+        } catch {}
+        setStatus(errMsg);
+      }
+    } catch (e) {
+      setStatus(e.message || 'Delete failed.');
+    }
   };
 
   return (
-    <div className="bg-white p-6 rounded shadow">
-      <h2 className="text-xl font-bold mb-4">{editingId ? 'Edit Product' : 'Add Product'}</h2>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <input name="name" value={form.name} onChange={handleChange} placeholder="Name" required className="border p-2" />
-        <textarea name="description" value={form.description} onChange={handleChange} placeholder="Description" required className="border p-2" />
-        <input name="category" value={form.category} onChange={handleChange} placeholder="Category" required className="border p-2" />
-        <input name="price" value={form.price} onChange={handleChange} placeholder="Price" type="number" required className="border p-2" />
-        <input name="quantity" value={form.quantity} onChange={handleChange} placeholder="Quantity" type="number" required className="border p-2" />
-        <input name="shippingPrice" value={form.shippingPrice} onChange={handleChange} placeholder="Shipping Price" type="number" required className="border p-2" />
-        <input type="file" accept="image/*" multiple onChange={handleFiles} className="border p-2" />
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">{editingId ? 'Update' : 'Upload'}</button>
-        {editingId && <button type="button" onClick={() => { setEditingId(null); setForm({ name: '', description: '', category: '', price: '', quantity: '', shippingPrice: '', images: [], imageUrls: [] }); }} className="text-gray-600">Cancel</button>}
+    <div className="product-upload-card">
+      <h2 className="product-upload-title">{editingId ? 'Edit Product' : 'Add Product'}</h2>
+      <form onSubmit={handleSubmit} className="product-upload-form">
+        <div className="product-upload-fields">
+          <input name="name" value={form.name} onChange={handleChange} placeholder="Product Name" required className="product-upload-input" />
+          <textarea name="description" value={form.description} onChange={handleChange} placeholder="Description" required className="product-upload-input" rows={3} />
+          <select
+            name="category"
+            value={form.category}
+            onChange={handleChange}
+            required
+            className="product-upload-input"
+          >
+            {CATEGORY_OPTIONS.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          <div className="product-upload-row">
+            <input name="price" value={form.price} onChange={handleChange} placeholder="Price (PKR)" type="number" required className="product-upload-input" />
+            <input name="quantity" value={form.quantity} onChange={handleChange} placeholder="Quantity" type="number" required className="product-upload-input" />
+            <input name="shippingPrice" value={form.shippingPrice} onChange={handleChange} placeholder="Shipping (PKR)" type="number" required className="product-upload-input" />
+          </div>
+          <label htmlFor="product-images" style={{ fontWeight: 500 }}>Select Images (you can select multiple)</label>
+          <input id="product-images" type="file" accept="image/*" multiple onChange={handleFiles} className="product-upload-input" />
+          <small style={{ color: '#888', marginTop: 2 }}>Hold Ctrl (Windows) or Cmd (Mac) to select multiple images.</small>
+        </div>
+        <div className="product-upload-actions">
+          <button type="submit" className="product-upload-btn product-upload-btn-primary">{editingId ? 'Update' : 'Upload'}</button>
+          {editingId && <button type="button" onClick={() => { setEditingId(null); setForm({ name: '', description: '', category: '', price: '', quantity: '', shippingPrice: '', images: [], imageUrls: [] }); }} className="product-upload-btn product-upload-btn-secondary">Cancel</button>}
+        </div>
+        {status && <div className="product-upload-status">{status}</div>}
       </form>
-      {status && <div className="mt-2">{status}</div>}
-      <hr className="my-6" />
-      <h3 className="font-bold mb-2">All Products</h3>
-      <ul className="divide-y max-h-64 overflow-auto">
+      <hr className="product-upload-divider" />
+      <h3 className="product-upload-list-title">All Products</h3>
+      <ul className="product-upload-list">
         {products.map(product => (
-          <li key={product._id} className="py-2 flex items-center justify-between">
+          <li key={product._id} className="product-upload-list-item">
             <div>
-              <span className="font-semibold">{product.name}</span> (${product.price}) | Shipping: ${product.shippingPrice}
+              <span className="product-upload-list-name">{product.name}</span> (PKR {product.price}) | Shipping: PKR {product.shippingPrice}
             </div>
-            <div className="flex gap-2">
-              <button onClick={() => handleEdit(product)} className="text-blue-600">Edit</button>
-              <button onClick={() => handleDelete(product._id)} className="text-red-600">Delete</button>
+            <div className="product-upload-list-actions">
+              <button onClick={() => handleEdit(product)} className="product-upload-list-btn product-upload-list-btn-edit">Edit</button>
+              <button onClick={() => handleDelete(product._id)} className="product-upload-list-btn product-upload-list-btn-delete">Delete</button>
             </div>
           </li>
         ))}
