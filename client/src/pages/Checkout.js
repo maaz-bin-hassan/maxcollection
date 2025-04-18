@@ -1,5 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { CartContext } from '../context/CartContext';
+import { API_ENDPOINTS } from '../config/api';
 import './Checkout.css';
 
 const Checkout = () => {
@@ -29,7 +30,7 @@ const Checkout = () => {
     }
     setStatus('Submitting order...');
     try {
-      const res = await fetch('/api/orders', {
+      const res = await fetch(API_ENDPOINTS.orders, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userInfo: form, cartItems: cart.map(({ _id, name, price, quantity }) => ({ productId: _id, name, price, quantity })) }),

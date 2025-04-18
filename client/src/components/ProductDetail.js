@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
+import { API_ENDPOINTS } from '../config/api';
 import './ProductDetail.css';
 
 const ProductDetail = () => {
@@ -11,7 +12,7 @@ const ProductDetail = () => {
   const { addToCart } = useContext(CartContext);
 
   useEffect(() => {
-    fetch(`/api/products/${id}`)
+    fetch(`${API_ENDPOINTS.products}/${id}`)
       .then(async res => {
         if (!res.ok) {
           const text = await res.text();

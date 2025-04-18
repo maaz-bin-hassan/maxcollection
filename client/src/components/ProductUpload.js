@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_ENDPOINTS } from '../config/api';
 import './ProductUpload.css';
 
 const CATEGORY_OPTIONS = [
@@ -19,7 +20,7 @@ const ProductUpload = ({ token }) => {
   const [editingId, setEditingId] = useState(null);
 
   const fetchProducts = () => {
-    fetch('/api/products')
+    fetch(API_ENDPOINTS.products)
       .then(res => res.json())
       .then(data => setProducts(Array.isArray(data) ? data : []))
       .catch(() => setProducts([]));
@@ -61,7 +62,7 @@ const ProductUpload = ({ token }) => {
       };
       if (editingId) {
         if (form.images.length) {
-          const res = await fetch('/api/products', {
+          const res = await fetch(API_ENDPOINTS.products, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -80,7 +81,7 @@ const ProductUpload = ({ token }) => {
             return;
           }
         }
-        const res = await fetch(`/api/products/${editingId}`, {
+        const res = await fetch(`${API_ENDPOINTS.products}/${editingId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -97,7 +98,7 @@ const ProductUpload = ({ token }) => {
           setStatus('Update failed.');
         }
       } else {
-        const res = await fetch('/api/products', {
+        const res = await fetch(API_ENDPOINTS.products, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -146,7 +147,7 @@ const ProductUpload = ({ token }) => {
   const handleDelete = async id => {
     setStatus('Deleting...');
     try {
-      const res = await fetch(`/api/products/${id}`, {
+      const res = await fetch(`${API_ENDPOINTS.products}/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import ProductUpload from '../components/ProductUpload';
 import OrderAdmin from '../components/OrderAdmin';
+import { API_ENDPOINTS } from '../config/api';
 import './Admin.css';
 
 const Admin = () => {
@@ -13,7 +14,7 @@ const Admin = () => {
     e.preventDefault();
     setLoginError('');
     try {
-      const res = await fetch('/api/products', {
+      const res = await fetch(API_ENDPOINTS.products, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

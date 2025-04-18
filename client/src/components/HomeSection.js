@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
+import { API_ENDPOINTS } from '../config/api';
 import './ProductList.css';
 import '../pages/Home.css';
 
@@ -73,7 +74,7 @@ const HomeSection = () => {
   const { addToCart } = useContext(CartContext);
 
   useEffect(() => {
-    fetch('/api/products')
+    fetch(API_ENDPOINTS.products)
       .then(res => res.json())
       .then(data => {
         setProducts(Array.isArray(data) ? data : []);

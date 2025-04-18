@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
+import { API_ENDPOINTS } from '../config/api';
 import './ProductList.css';
 
 const PKR = new Intl.NumberFormat('en-PK');
@@ -42,7 +43,7 @@ const ProductList = () => {
   const { addToCart } = useContext(CartContext);
 
   useEffect(() => {
-    fetch('/api/products')
+    fetch(API_ENDPOINTS.products)
       .then(async res => {
         if (!res.ok) {
           const text = await res.text();

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { API_ENDPOINTS } from '../config/api';
 import './OrderAdmin.css';
 
 const statusOptions = [
@@ -16,7 +17,7 @@ const OrderAdmin = ({ token }) => {
 
   const fetchOrders = () => {
     setLoading(true);
-    fetch('/api/orders', {
+    fetch(API_ENDPOINTS.orders, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(async res => {
@@ -58,7 +59,7 @@ const OrderAdmin = ({ token }) => {
 
   const updateStatus = async (id, newStatus) => {
     setStatus('Updating...');
-    await fetch(`/api/orders/${id}/deliver`, {
+    await fetch(`${API_ENDPOINTS.orders}/${id}/deliver`, {
       method: 'PUT',
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify({ status: newStatus })
